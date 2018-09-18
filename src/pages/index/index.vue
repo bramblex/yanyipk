@@ -179,12 +179,10 @@
         const face = await this.getFaceInfo(this.face)
         wx.hideLoading()
 
-        if (!reference || !hasFace(reference)) {
+        if (!reference || !hasFace(reference) || !face || !hasFace(face)) {
+          console.log(reference)
+          console.log(face)
           wx.showModal({ title: '提示', content: '被 pk 者图片错误' })
-        }
-
-        if (!face || !hasFace(face)) {
-          wx.showModal({ title: '提示', content: 'pk 者图片错误' })
         }
 
         this.score = compare(reference, face)

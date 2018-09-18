@@ -122,6 +122,7 @@
 
 <script>
   import { attributes, hasFace, compare } from './face-analize.js'
+  import referenceTokens from './references.json'
 
   export default {
     data () {
@@ -158,6 +159,24 @@
         }))
       },
 
+      getFaceInfoByToken (token) {
+        return new Promise(resolve => wx.request({
+          method: 'POST',
+          url: 'https://api-cn.faceplusplus.com/facepp/v3/face/analyze',
+          dataType: 'json',
+          header: { 'content-type': 'application/x-www-form-urlencoded' },
+          data: {
+            api_key: 'Yuidwhp8NdJluvBWp4_iS1fEA7kbDFq-',
+            api_secret: 'pN9aSlIo3-1q6xklRXRX8WGvAz3yuFHT',
+            face_tokens: token,
+            return_attributes: attributes.join(','),
+            return_landmark: 1
+          },
+          success: res => resolve(res.data),
+          fail: () => resolve(null)
+        }))
+      },
+
       chooseImage () {
         return new Promise(resolve => wx.chooseImage({
           count: 1,
@@ -175,14 +194,19 @@
         if (!this.reference || !this.face) return
 
         wx.showLoading({ title: '正在计算' })
-        const reference = await this.getFaceInfo(this.reference)
+        let reference
+        if (referenceTokens[this.reference]) {
+          reference = await this.getFaceInfoByToken(referenceTokens[this.reference])
+        } else {
+          reference = await this.getFaceInfo(this.reference)
+        }
         const face = await this.getFaceInfo(this.face)
         wx.hideLoading()
 
         if (!reference || !hasFace(reference) || !face || !hasFace(face)) {
           console.log(reference)
           console.log(face)
-          wx.showModal({ title: '提示', content: '被 pk 者图片错误' })
+          wx.showModal({ title: '提示', content: '图片错误' })
         }
 
         this.score = compare(reference, face)
